@@ -11,8 +11,6 @@ df = df[df['product'].str.lower() == 'pink morsel']
 df['sales'] = df['price'] * df['quantity']
 df = df[['date', 'region', 'sales']]
 
-print(df)
-
 df.to_csv('assets/daily_sales_data_pinkMorsel.csv', index=False)
 
 import dash
