@@ -1,34 +1,61 @@
 import pandas as pd
 import glob
 
+# --- Data prep ---
 csv_files = glob.glob('assets/*.csv')
-
 df = pd.concat([pd.read_csv(file) for file in csv_files], ignore_index=True)
 
 df['price'] = df['price'].replace(r'[\$,]', '', regex=True).astype(float)
 df = df[df['product'].str.lower() == 'pink morsel']
-
 df['sales'] = df['price'] * df['quantity']
 df = df[['date', 'region', 'sales']]
-
 df.to_csv('assets/pinkMorsel.csv', index=False)
 
+# Reload and sort
+df = pd.read_csv('assets/pinkMorsel.csv').sort_values(by='date')
+
+
+#Dash app
 import dash
 import dash_bootstrap_components as dbc
 from dash import dcc, Input, Output, html
 import plotly.express as px
 
-df = pd.read_csv('assets/pinkMorsel.csv')
-df = df.sort_values(by='date')
+def run_dash_app(df):
+    app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY])
 
-fig = px.line(df,x='date',y='sales',title='pink morsel sales')
+    app.layout = dbc.Container([
+        html.H1("Pink Morsel Sales Visualizer", 
+                className="text-center text-primary mb-4"),
 
-app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
+        # Region selector
+        dcc.RadioItems(
+            id='region-radio',
+            options=[{'label': r, 'value': r} for r in df['region'].unique()],
+            value=df['region'].unique()[0],  # default
+            inline=True
+        ),
 
-app.layout = dbc.Container([
-    html.H1("Pink Morsel Sales Visualizer"),
-    dcc.Graph(figure=fig)
-], fluid=True)
+        dcc.Graph(id='sales-graph')
+    ], fluid=True)
+
+    # Callback
+    @app.callback(
+        Output('sales-graph', 'figure'),
+        Input('region-radio', 'value')
+    )
+    def update_graph(selected_region):
+        filtered_df = df[df['region'] == selected_region]
+        fig = px.line(
+            filtered_df, x='date', y='sales',
+            title=f"Pink Morsel Sales in {selected_region}",
+            markers=True
+        )
+        fig.update_layout(template="plotly_white")
+        return fig
+
+    app.run(debug=True)
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    run_dash_app(df)
