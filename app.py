@@ -2,18 +2,16 @@ import pandas as pd
 import glob
 
 # --- Data prep ---
-csv_files = glob.glob('assets/*.csv')
-df = pd.concat([pd.read_csv(file) for file in csv_files], ignore_index=True)
 
-df['price'] = df['price'].replace(r'[\$,]', '', regex=True).astype(float)
-df = df[df['product'].str.lower() == 'pink morsel']
-df['sales'] = df['price'] * df['quantity']
-df = df[['date', 'region', 'sales']]
-df.to_csv('assets/pinkMorsel.csv', index=False)
+def cleaned(df):
+    df['price'] = df['price'].replace(r'[\$,]', '', regex=True).astype(float)
+    df = df[df['product'].str.lower() == 'pink morsel']
+    df['sales'] = df['price'] * df['quantity']
+    df = df[['date', 'region', 'sales']]
+    return df
 
-# Reload and sort
-df = pd.read_csv('assets/pinkMorsel.csv').sort_values(by='date')
-
+def exportcsv(df):
+    df.to_csv('assets/pinkMorsel.csv', index=False)
 
 #Dash app
 import dash
@@ -58,4 +56,11 @@ def run_dash_app(df):
 
 
 if __name__ == "__main__":
+    csv_files = glob.glob('assets/*.csv')
+    df = cleaned(pd.concat([pd.read_csv(file) for file in csv_files], ignore_index=True))
+    exportcsv(df)
+
+    # Reload and sort
+    df = pd.read_csv('assets/pinkMorsel.csv').sort_values(by='date')
+
     run_dash_app(df)
