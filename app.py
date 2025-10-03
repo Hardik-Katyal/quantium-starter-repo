@@ -19,11 +19,12 @@ import dash_bootstrap_components as dbc
 from dash import dcc, Input, Output, html
 import plotly.express as px
 
-def run_dash_app(df):
+def create_dash_app(df):
     app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY])
 
     app.layout = dbc.Container([
-        html.H1("Pink Morsel Sales Visualizer", 
+        html.H1("Pink Morsel Sales Visualizer",
+                id='main-header',
                 className="text-center text-primary mb-4"),
 
         # Region selector
@@ -51,7 +52,10 @@ def run_dash_app(df):
         )
         fig.update_layout(template="plotly_white")
         return fig
+    return app
 
+def run_dash_app(df):
+    app = create_dash_app(df)
     app.run(debug=True)
 
 
